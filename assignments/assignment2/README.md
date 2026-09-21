@@ -14,7 +14,7 @@ For this question, you will work with a one megabase segment of human chromosome
 
 Download, unzip it and extract one megabase segment from 20Mb to 21Mbp:
 ```
-    wget https://github.com/schatzlab/appliedgenomics2025/raw/refs/heads/main/assignments/assignment1/chr22.fa.gz
+    wget https://github.com/schatzlab/appliedgenomics2026/raw/refs/heads/main/assignments/assignment1/chr22.fa.gz
     gunzip chr22.fa.gz
     samtools faidx chr22.fa
     samtools faidx chr22.fa chr22:20000000-21000000 > chr22_orig.fa
@@ -111,7 +111,7 @@ TTGAT
 
 #### Question 3. Kmer Analysis [20 pts]
 
-Download the reads and reference genome from: [https://github.com/schatzlab/appliedgenomics2025/raw/main/assignments/assignment2/asm.tgz](https://github.com/schatzlab/appliedgenomics2025/raw/main/assignments/assignment2/asm.tgz)
+Download the reads and reference genome from: [https://github.com/schatzlab/appliedgenomics2026/raw/main/assignments/assignment2/asm.tgz](https://github.com/schatzlab/appliedgenomics2026/raw/main/assignments/assignment2/asm.tgz)
 
 Note we have provided both paired-end and mate-pairs reads (see included README for details). Make sure to look at all of the reads for the coverage analysis and kmer analysis, as well as in the assembly.
 
