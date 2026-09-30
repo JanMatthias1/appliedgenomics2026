@@ -4,7 +4,7 @@ Due Date: Wednesday, October 7, 2026 @ 11:59pm <br>
 
 ### Assignment Overview
 
-In this assignment you will implement the requirements for variant calling. The programming exercises can be computed in any programming language, although we recommend python. R is generally inefficient at string processing unless you take great care. See the resources at the bottom of the page for tips for the variant calling exercises.
+In this assignment you will implement the requirements and applications for variant calling. We recommend python for all of the programming exercises. See the resources at the bottom of the page for tips for the variant calling exercises.
 
 As a reminder, any questions about the assignment should be posted to [Piazza](https://piazza.com/class/mt9gq0k8adb7l7#).
 
@@ -89,12 +89,41 @@ To answer the following questions, you will need to run several alignment and va
 
 - 3d. Between the variants shared between all three friends, which is likeliest to cause a phenotype of interest? [Hint: The variant should be homozygous in all 3 samples and will be in a gene that has a function related to taste. You can search for variants at a certain chromosome and position at https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38. Remember, the position in the intersected VCF is the position within the region we're looking at, so you will have to find the starting location of the region by shifting over by 5868417! Use `bcftools view -i 'GT="1/1"' PREFIX.vcf` to filter for the correct genotype.]
 
-- 3e. What is the phenotype? [Hint: Search the name of the gene associated with the variant you found in 4d.]
+- 3e. What is the phenotype? [Hint: Search the name of the gene associated with the variant you found in 3d.]
 
+
+### Question 4. Planetary Population Analysis [20 pts]
+
+You have synthetic genotypes from five populations: **mercury, venus, mars, saturn, and pluto**. Explore their genetic relationships using PCA, t-SNE, and UMAP, then train a classifier to predict the population of origin of additional unlabeled people. Infer which populations are most similar from your analysis.
+
+Download the files from the [planets directory](planets/):
+
+| File | People | Columns |
+| --- | ---: | --- |
+| [planets/labeled_genotypes.csv](planets/labeled_genotypes.csv) | 500 (100 per population) | `sample_id`, `population`, `variant_001` through `variant_100` |
+| [planets/challenge_genotypes.csv](planets/challenge_genotypes.csv) | 50 | `sample_id`, `variant_001` through `variant_100` |
+
+Each person has 100 binary variant values (`0` or `1`). These are simplified allele indicators, rather than diploid `0/1/2` allele dosages. Rows are shuffled, and the challenge population labels are hidden. Sample IDs identify people and should not be used as genetic features.
+
+Use Python with pandas, NumPy, matplotlib, scikit-learn, and umap-learn (see the resources below). A Jupyter notebook is recommended. Each part should require only about 20 lines of code; you can reuse a small plotting helper. Use `random_state=2026` for stochastic methods and the validation split, and keep population colors consistent across plots.
+
+- 4a. Load the files with `pandas.read_csv`. Build a feature matrix `X` containing only the 100 variant columns and a label vector `y` from `population`. Use the same variant column order for the challenge matrix. Report the two feature matrix shapes, confirm that the genotypes contain only zeros and ones, and count the labeled people in each population. Explain why `sample_id` and `population` should be excluded from `X`.
+
+- 4b. Use `sklearn.decomposition.PCA(n_components=2)` to visualize the labeled genotypes. Plot one point per person, colored by population, with a legend. Label the axes with the percentage of variance explained by each component using `explained_variance_ratio_`. Use the original binary values; PCA automatically centers the columns. What fraction of the variance do the two components explain together? Which populations appear most similar, and which are clearly separated?
+
+- 4c. Use `sklearn.manifold.TSNE` with `n_components=2`, `perplexity=30`, `init="pca"`, `learning_rate="auto"`, and `random_state=2026`. Apply it to the original 100 variant columns and plot the result as above. Which populations appear most similar in this plot? Does this agree with PCA? Why should you be cautious about interpreting the distances between separate t-SNE clusters as genetic distances?
+
+- 4d. Use `umap.UMAP` with `n_components=2`, `n_neighbors=15`, `min_dist=0.1`, `metric="hamming"`, `random_state=2026`, and `n_jobs=1`. Hamming distance is the fraction of variants at which two genotypes differ. Call `fit_transform(X)` without passing population labels, then use the labels to color the plot. Which populations appear most similar in UMAP? Compare your conclusions across all three plots, including any disagreement or uncertainty. Which method most clearly separates the populations? The first UMAP run may take longer while its numerical code compiles.
+
+- 4e. Split the labeled data into 80% training and 20% validation using `sklearn.model_selection.train_test_split` with `stratify=y` and `random_state=2026`. Train a `sklearn.neighbors.KNeighborsClassifier` with `n_neighbors=5`, `metric="hamming"`, and `algorithm="brute"` on the **100 original variant columns**. Report validation accuracy and plot a confusion matrix using `sklearn.metrics.ConfusionMatrixDisplay`. Fit the classifier only on the training split during validation. What accuracy would random guessing achieve? Based on your plots, which populations would you expect to be confused, and does the confusion matrix support that expectation? Does overlap in a 2D plot necessarily imply poor classification?
+
+- 4f. After validation, refit the classifier on all 500 labeled people and predict the populations of the 50 challenge people. Save `predictions.csv` with exactly two columns, `sample_id` and `predicted_population`, in the original challenge file order and print into your solutions PDF. Keep each prediction attached to the correct sample ID. Make predictions from the genotypes without imposing a particular number of predictions per population. 
 
 ### Packaging
 
 The solutions to the above questions should be submitted as a single PDF document that includes your name, email address, and all relevant figures (as needed). If you use ChatGPT for any of the code, also record the prompts used. Submit your solutions by uploading the PDF to [GradeScope](https://www.gradescope.com/courses/1370921), and remember to select where in your submission each question/subquestion is. The Entry Code is: 7B4VJ6. 
+
+For Question 4, include your code and the complete prediction table from `predictions.csv` in the PDF, along with your figures and discussion answers.
 
 If you submit after this time, you will use your late days. Remember, you are only allowed 4 late days for the entire semester!
 
@@ -142,3 +171,18 @@ $ bcftools index PREFIX.norm.vcf.gz
 ## Now compare the variants in the three samples
 $ bcftools isec PREFIX1.norm.vcf.gz PREFIX2.norm.vcf.gz PREFIX3.norm.vcf.gz -p norm -n=3
 ```
+
+
+#### Python libraries for population analysis
+
+```bash
+python -m pip install numpy pandas matplotlib scikit-learn umap-learn jupyterlab
+jupyter lab
+```
+
+The package `umap-learn` is imported as `umap`; scikit-learn is imported as `sklearn`. Run your notebook from the assignment directory so paths such as `planets/labeled_genotypes.csv` work.
+
+- [pandas.read_csv](https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html): load the genotype tables.
+- [PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html) and [t-SNE](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html): dimensionality reduction with scikit-learn.
+- [UMAP](https://umap-learn.readthedocs.io/en/latest/api.html): dimensionality reduction with umap-learn.
+- [train_test_split](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html), [KNeighborsClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html), and [ConfusionMatrixDisplay](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.ConfusionMatrixDisplay.html): validate and evaluate your classifier.
